@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>A Summer of Running — Strava Data Dashboard</title>
+<style>
+  :root {
+    --ink: #1d2b3a;
+    --accent: #e0542e;
+    --accent2: #2a7f9e;
+    --mute: #8a94a6;
+    --grid: #e6e9ee;
+    --bg: #f7f8fa;
+    --card: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "DejaVu Sans", sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.55;
+  }
+  header {
+    background: linear-gradient(135deg, var(--ink) 0%, #263a4f 100%);
+    color: #fff;
+    padding: 3.5rem 1.5rem 3rem;
+    text-align: center;
+  }
+  header h1 { margin: 0 0 .5rem; font-size: 2.1rem; letter-spacing: -.5px; }
+  header p { margin: .25rem auto; max-width: 640px; color: #c9d3df; font-size: 1.02rem; }
+  .accent-bar { height: 5px; background: var(--accent); }
+  main { max-width: 1080px; margin: 0 auto; padding: 2.5rem 1.5rem 4rem; }
+  .stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem; margin: -4.5rem auto 3rem; max-width: 900px; position: relative; z-index: 2;
+  }
+  .stat {
+    background: var(--card); border-radius: 12px; padding: 1.25rem 1rem; text-align: center;
+    box-shadow: 0 4px 18px rgba(29,43,58,.08);
+  }
+  .stat .num { font-size: 1.9rem; font-weight: 700; color: var(--accent); line-height: 1; }
+  .stat .lbl { font-size: .82rem; color: var(--mute); margin-top: .4rem; text-transform: uppercase; letter-spacing: .5px; }
+  .card {
+    background: var(--card); border-radius: 14px; overflow: hidden; margin-bottom: 2.25rem;
+    box-shadow: 0 2px 14px rgba(29,43,58,.07); border: 1px solid var(--grid);
+  }
+  .card-head { padding: 1.4rem 1.6rem .3rem; }
+  .tag {
+    display: inline-block; font-size: .72rem; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .6px; color: #fff; background: var(--accent2); padding: .2rem .6rem;
+    border-radius: 999px; margin-bottom: .7rem;
+  }
+  .tag.adv { background: var(--accent); }
+  .card-head h2 { margin: 0 0 .35rem; font-size: 1.28rem; }
+  .card-head p { margin: 0; color: #4a5a6b; font-size: .97rem; }
+  .card img { display: block; width: 100%; height: auto; padding: 1rem 1.6rem 1.6rem; }
+  .insight {
+    background: #fbf3f0; border-left: 4px solid var(--accent); margin: 0 1.6rem 1.6rem;
+    padding: .85rem 1.1rem; border-radius: 0 8px 8px 0; font-size: .93rem; color: #5a4a44;
+  }
+  .insight strong { color: var(--accent); }
+  .section-title { font-size: .85rem; text-transform: uppercase; letter-spacing: 1px; color: var(--mute); margin: 2.5rem 0 1rem; font-weight: 700; }
+  footer { text-align: center; padding: 2.5rem 1.5rem; color: var(--mute); font-size: .88rem; border-top: 1px solid var(--grid); }
+  footer a { color: var(--accent2); text-decoration: none; }
+  @media (max-width: 600px) {
+    header h1 { font-size: 1.6rem; }
+    .card img, .card-head { padding-left: 1rem; padding-right: 1rem; }
+    .insight { margin-left: 1rem; margin-right: 1rem; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>A Summer of Running</h1>
+  <p>What 64 GPS tracks reveal about one night runner — an exploratory analysis of a raw Strava / Garmin&nbsp;FIT data dump.</p>
+</header>
+<div class="accent-bar"></div>
+
+<main>
+  <section class="stats">
+    <div class="stat"><div class="num">40k+</div><div class="lbl">GPS samples</div></div>
+    <div class="stat"><div class="num">64</div><div class="lbl">Activities</div></div>
+    <div class="stat"><div class="num">~80%</div><div class="lbl">Runs after 8pm</div></div>
+    <div class="stat"><div class="num">Summer '19</div><div class="lbl">Ann Arbor, MI</div></div>
+  </section>
+
+  <p style="font-size:1.02rem; color:#4a5a6b; max-width:760px; margin:0 auto 1rem;">
+    A single unlabeled CSV — no summaries, just 40,000+ tracked points — reconstructed into a portrait of
+    who this athlete is, how hard they train, and whether their effort is efficient. Three basic visual
+    techniques (histogram, scatter, box/violin) plus one advanced technique (a 2-D aerobic-decoupling density map).
+  </p>
+
+  <div class="section-title">Basic techniques</div>
+
+  <div class="card">
+    <div class="card-head">
+      <span class="tag">Histogram</span>
+      <h2>This is a night runner</h2>
+      <p>Distribution of run start times across the 24-hour clock.</p>
+    </div>
+    <img src="assets/01-night-runner.png" alt="Histogram of run start hour, peaking around 9pm" />
+    <div class="insight"><strong>Insight:</strong> Strikingly unimodal at 21:00 with a heavy 8pm–midnight block and an after-midnight cluster — training built around a night schedule, consistent with a college-town routine.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <span class="tag">Scatter</span>
+      <h2>Speed comes from stride, not turnover</h2>
+      <p>Cadence vs. speed, colored by heart rate, against the "180 spm" coaching rule.</p>
+    </div>
+    <img src="assets/02-cadence-speed.png" alt="Scatter of cadence vs speed colored by heart rate" />
+    <div class="insight"><strong>Insight:</strong> Cadence rises only gently and mostly sits <em>below</em> the mythical 180 spm. This runner adds speed primarily through stride length — the folk-wisdom rule simply doesn't describe them.</div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <span class="tag">Box + Violin</span>
+      <h2>Tight weekdays, wide-open weekends</h2>
+      <p>Pace distribution by day of week — medians and full shape together.</p>
+    </div>
+    <img src="assets/03-pace-by-day.png" alt="Box and violin plot of pace by day of week" />
+    <div class="insight"><strong>Insight:</strong> Weekday medians cluster tightly (habitual training) while weekend violins fan out — short fast efforts mixed with long slow ones, the classic fingerprint of a structured plan.</div>
+  </div>
+
+  <div class="section-title">Advanced technique</div>
+
+  <div class="card">
+    <div class="card-head">
+      <span class="tag adv">2-D Density Map</span>
+      <h2>Aerobic decoupling: efficiency holds, then fades</h2>
+      <p>Hexbin of efficiency (speed ÷ heart rate) vs. run progress, with a fitted median drift curve.</p>
+    </div>
+    <img src="assets/04-aerobic-decoupling.png" alt="Hexbin density map of efficiency versus run progress with median drift curve" />
+    <div class="insight"><strong>Insight:</strong> The dense core holds right on baseline for the first ~60% of each run, then bends downward late. A modest late decouple like this signals good — but not elite — aerobic durability; the gain available is extending the point where efficiency starts to fade.</div>
+  </div>
+
+  <div class="section-title">Bonus: Stryd power subset</div>
+
+  <div class="card">
+    <div class="card-head">
+      <span class="tag">Scatter + Fit</span>
+      <h2>More bounce, more wasted power</h2>
+      <p>Form power vs. vertical oscillation on the 10 power-equipped runs — a physics sanity check.</p>
+    </div>
+    <img src="assets/05-form-power.png" alt="Scatter of form power versus vertical oscillation with linear fit" />
+    <div class="insight"><strong>Insight:</strong> The positive correlation confirms the data is physically consistent: more vertical bounce means more wasted (form) power. The actionable lever — reducing bounce reclaims watts for forward speed.</div>
+  </div>
+
+  <div class="section-title">Verdict</div>
+  <div class="card">
+    <div class="card-head" style="padding-bottom:1.4rem;">
+      <p style="color:var(--ink);">From an unlabeled 40k-row dump, a coherent portrait: a <strong>night runner in Ann Arbor</strong> training through summer 2019, who gets speed from <strong>stride length not turnover</strong>, follows a <strong>structured weekly plan</strong>, holds efficiency steady before a <strong>modest late decouple</strong>, and — where power data exists — <strong>wastes watts to vertical bounce</strong>. A busted myth (180 spm), a durability diagnosis, and one concrete efficiency tip.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Built from a Jupyter notebook analysis of Garmin/Stryd FIT data · figures generated with matplotlib &amp; seaborn.<br>
+  See the <a href="README.md">README</a> and <code>notebook/</code> for full source and reproducibility notes.
+</footer>
+</body>
+</html>
